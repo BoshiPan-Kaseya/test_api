@@ -59,7 +59,8 @@ module.exports = {
             const result = compareSync(body.password, results.password);
 
             if (result) {
-                result.password = undefined;
+
+                results.password = undefined;
                 const jsontoken = sign(
                     { result: results },
                     process.env.SECRET_KEY,
@@ -78,7 +79,7 @@ module.exports = {
                     results.id,
                     JSON.stringify({
                         refresh_token: refreshToken,
-                        expires: new Date() + process.env.JWT_REFRESH_TIME,
+                        expires_in: process.env.JWT_REFRESH_TIME,
                     })
                 );
                 return res.json({
