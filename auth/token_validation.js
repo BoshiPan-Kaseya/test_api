@@ -59,12 +59,13 @@ module.exports = {
                                     );
                                     rediscl.set(
                                         decode.result.id,
-                                        new_refresh_token
+                                        JSON.stringify({
+                                            refresh_token: new_refresh_token,
+                                            expires_in:
+                                                process.env.JWT_REFRESH_TIME,
+                                        })
                                     );
-                                    // res.status(200).json({
-                                    //     success: 1,
-                                    //     token: new_access_token
-                                    // })
+
                                     req.payload = new_access_token;
                                     console.log(
                                         "new token has generated and pass"

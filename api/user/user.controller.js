@@ -59,7 +59,6 @@ module.exports = {
             const result = compareSync(body.password, results.password);
 
             if (result) {
-
                 results.password = undefined;
                 const jsontoken = sign(
                     { result: results },
