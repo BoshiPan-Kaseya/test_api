@@ -45,14 +45,6 @@ module.exports = {
                                     console.log(
                                         "Access token has expired, but refresh token is still working"
                                     );
-                                    console.log(
-                                        "decoded info from refresh token",
-                                        decode
-                                    );
-                                    // decoded info from refresh token {
-                                    // result: { id: '7f7d1801-770e-11ed-a57c-00155d048cba', username: 'EDDIE' },
-                                    //iat: 1671468775,
-                                    //exp: 1671470575
                                     const new_access_token = sign(
                                         { result: decode.result },
                                         process.env.SECRET_KEY,
@@ -63,28 +55,30 @@ module.exports = {
                                     );
 
                                     const new_refresh_token = sign(
-                                        {result: decode.result},
+                                        { result: decode.result },
                                         process.env.SECRET_KEY,
                                         {
                                             expiresIn:
-                                                process.env.JWT_REFRESH_TIME
+                                                process.env.JWT_REFRESH_TIME,
                                         }
                                     );
-
-                                    rediscl.set(decode.result.id, new_refresh_token);
-                                    res.status(200).json({
-                                        success: 1,
-                                        token: new_access_token
-                                    })
+                                    rediscl.set(
+                                        decode.result.id,
+                                        new_refresh_token
+                                    );
+                                    // res.status(200).json({
+                                    //     success: 1,
+                                    //     token: new_access_token
+                                    // })
+                                    req.payload = new_access_token;
+                                    console.log(
+                                        "new token has generated and pass"
+                                    );
+                                    next();
                                 }
                             }
                         );
                     }
-                    res.status(401).json({
-                        success: 0,
-                        message:
-                            "Token received, but token has some validate issues",
-                    });
                 } else {
                     console.log("pass");
                     next();
