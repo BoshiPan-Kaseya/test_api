@@ -7,11 +7,6 @@ module.exports = {
         if (token) {
             token = token.slice(7);
             const decoded_info = decode(token);
-            // {
-            //     result: { id: '7f7d1801-770e-11ed-a57c-00155d048cba', username: 'EDDIE' },
-            //     iat: 1671466472,
-            //     exp: 1671466472
-            // }
             verify(token, process.env.SECRET_KEY, async (err, decoded) => {
                 if (err) {
                     if (err.name === "TokenExpiredError") {
