@@ -1,19 +1,19 @@
 const db = require("../../db/db");
 
 module.exports = {
-    getAllEmpolyee: callBack => {
-        db.query (
-            `select BIN_TO_UUID(e.employee_id) as employee_id, e.first_name, e.last_name, e.DOB, e.email, s.skill_name, e.active, e.age
+    getAllEmpolyee: (callBack) => {
+        db.query(
+            `select BIN_TO_UUID(e.employee_id) as employee_id, e.first_name, e.last_name, e.DOB, e.email, BIN_TO_UUID(s.skill_level) as skill_level, s.skill_name, e.active, e.age
              from employee e, skill s 
              where s.skill_level = e.skill_level`,
-             [],
-             (error, results, field) => {
+            [],
+            (error, results, field) => {
                 if (error) {
                     return callBack(error);
                 }
                 return callBack(null, results);
-             }
-        )
+            }
+        );
     },
 
     createEmployee: (data, callBack) => {
@@ -26,7 +26,7 @@ module.exports = {
                 data.email,
                 data.skill_level,
                 data.active,
-                data.age
+                data.age,
             ],
             (error, results, field) => {
                 if (error) {
@@ -34,7 +34,7 @@ module.exports = {
                 }
                 return callBack(null, results);
             }
-        )
+        );
     },
 
     deleteEmployeeByID: (employee_id, callBack) => {
@@ -47,10 +47,10 @@ module.exports = {
                 }
                 return callBack(null, results);
             }
-        )
+        );
     },
 
-    updateEmployeeByID: ({employee_id, body}, callBack) => {
+    updateEmployeeByID: ({ employee_id, body }, callBack) => {
         db.query(
             `update employee set first_name = ?, last_name = ?, DOB = ?, email = ?, skill_level = UUID_TO_BIN(?), active = ?, age = ?
              where employee_id = UUID_TO_BIN(?)`,
@@ -70,6 +70,6 @@ module.exports = {
                 }
                 return callBack(null, results);
             }
-        )
-    }
-}
+        );
+    },
+};
