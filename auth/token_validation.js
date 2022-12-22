@@ -1,5 +1,6 @@
 const { verify, decode, sign } = require("jsonwebtoken");
 const rediscl = require("../db/cache");
+const log = require("../log/log.js");
 
 module.exports = {
     checkToken: (req, res, next) => {
@@ -24,12 +25,14 @@ module.exports = {
                                         refresh_token_err.name ===
                                         "TokenExpiredError"
                                     ) {
+                                        log.error("token_validation", refresh_token_err.name);
                                         res.status(401).json({
                                             success: 0,
                                             message:
                                                 "Access denied, Credential infomation has expired.",
                                         });
                                     } else {
+                                        log.error("token_validation", refresh_token_err.name)
                                         res.status(401).json({
                                             success: 0,
                                             message:
@@ -37,9 +40,7 @@ module.exports = {
                                         });
                                     }
                                 } else {
-                                    console.log(
-                                        "Access token has expired, but refresh token is still working"
-                                    );
+                                    log.log("token_validation", "access_token expired, generating from refresh token")
                                     const new_access_token = sign(
                                         { result: decode.result },
                                         process.env.SECRET_KEY,
@@ -57,6 +58,7 @@ module.exports = {
                                                 process.env.JWT_REFRESH_TIME,
                                         }
                                     );
+
                                     rediscl.set(
                                         decode.result.id,
                                         JSON.stringify({
@@ -65,22 +67,22 @@ module.exports = {
                                                 process.env.JWT_REFRESH_TIME,
                                         })
                                     );
+                                    log.log("token_validation", "refresh token updated")
 
                                     req.payload = new_access_token;
-                                    console.log(
-                                        "new token has generated and pass"
-                                    );
+                                    log.log("token_validation", "new access token generated")
                                     next();
                                 }
                             }
                         );
                     }
                 } else {
-                    console.log("pass");
+                    log.log("token_validation", "validate successful")
                     next();
                 }
             });
         } else {
+            log.error("token_validation", "unauthorized user trying to get access")
             res.status(401).json({
                 success: 0,
                 message: "Access denied! Authorized token required.",

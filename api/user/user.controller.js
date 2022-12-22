@@ -2,6 +2,7 @@ const { genSaltSync, hashSync, compareSync } = require("bcryptjs");
 const { create, getUserByUsername } = require("./user.service");
 const { sign } = require("jsonwebtoken");
 const rediscl = require("../../db/cache");
+const log = require("../../log/log");
 
 module.exports = {
     createUser: (req, res) => {
@@ -10,12 +11,13 @@ module.exports = {
         body.password = hashSync(body.password, salt);
         create(body, (err, results) => {
             if (err) {
-                console.log(err);
+                log.error("user.controller.createUser", err);
                 return res.status(500).json({
                     success: 0,
                     message: "Database connection error",
                 });
             }
+            log.log("user.controller.createUser", "new admin users has been created")
             return res.status(200).json({
                 success: 1,
                 data: results,
@@ -27,15 +29,17 @@ module.exports = {
         const username = req.params.username;
         getUserByUsername(username, (err, results) => {
             if (err) {
-                console.log(err);
+                log.err("user.controller.getUserByName", err);
                 return;
             }
             if (!results) {
+                log.error("user.controller.getUserByName", "username is not found")
                 return res.json({
                     success: 0,
                     message: "Record not Found",
                 });
             }
+            log.log("user.controller.getUserByName", "record found")
             return res.json({
                 success: 1,
                 data: results,
@@ -45,12 +49,13 @@ module.exports = {
 
     login: (req, res) => {
         const body = req.body;
-        console.log("request received");
+        log.log("user.controller.login", `user ${body.username} is trying to login`)
         getUserByUsername(body.username, (err, results) => {
             if (err) {
-                console.log(err);
+                log.error("user.controller.login", err);
             }
             if (!results) {
+                log.error("user.controller.login", `user with username ${body.username} is not found`)
                 return res.json({
                     success: 0,
                     data: "Invalid username or password",
@@ -59,6 +64,7 @@ module.exports = {
             const result = compareSync(body.password, results.password);
 
             if (result) {
+                log.log("user.controller.login", "user authentication matches")
                 results.password = undefined;
                 const jsontoken = sign(
                     { result: results },
@@ -74,6 +80,7 @@ module.exports = {
                         expiresIn: process.env.JWT_REFRESH_TIME,
                     }
                 );
+                log.log("user.controller.login", "tokens has generated")
                 rediscl.set(
                     results.id,
                     JSON.stringify({
@@ -81,6 +88,7 @@ module.exports = {
                         expires_in: process.env.JWT_REFRESH_TIME,
                     })
                 );
+                log.log("user.controller.login", "refresh token has been stored in Redis")
                 return res.json({
                     success: 1,
                     message: "login successfully",
@@ -89,9 +97,10 @@ module.exports = {
                     token: jsontoken,
                 });
             } else {
+                log.error("user.controller.login", "invalid username or password")
                 return res.json({
                     success: 0,
-                    data: "Invalid email or password",
+                    data: "Invalid username or password",
                 });
             }
         });
